@@ -13,4 +13,4 @@ class SVMClassifier(Classifier):
         self._model.fit(train_data, train_label)
 
     def predict(self, data, *args, **kwargs):
-        self._model.decision_function(data)
+        return self._model.decision_function(data)

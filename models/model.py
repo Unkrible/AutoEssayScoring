@@ -21,4 +21,4 @@ class Model(Classifier):
     @timeit
     def predict(self, data, *args, **kwargs):
         data = self._fe.transform(data)
-        self._model.predict(data, *args, **kwargs)
+        return self._model.predict(data, *args, **kwargs)

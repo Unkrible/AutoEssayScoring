@@ -241,3 +241,10 @@ def root_mean_square_error(y_true, y_pred):
     y_pred = np.asarray(y_pred)
     mse = ((y_true - y_pred) ** 2).mean(axis=0)
     return float(math.sqrt(mse))
+
+
+if __name__ == '__main__':
+    y_true = [1, 4, 2, 2, 5, 2, 5, 4, 5, 3, 1]
+    y_pred = [3, 4, 4, 4, 4, 4, 6, 7, 8, 9, 10]
+    k = kappa(y_true, y_pred, 'quadratic')
+    print(k)

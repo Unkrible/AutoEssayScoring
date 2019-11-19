@@ -5,13 +5,10 @@ import pandas as pd
 from collections import namedtuple
 from pathlib import Path
 
-from common import get_logger
+from common import log, timeit
 from constant import *
 
 Dataset = namedtuple("Dataset", ['data', 'label'])
-
-VERBOSITY_LEVEL = 'DEBUG'
-logger = get_logger(VERBOSITY_LEVEL, __file__)
 
 
 class AutoEssayScoringDataset:
@@ -27,7 +24,7 @@ class AutoEssayScoringDataset:
         self._valid_data = None
         self._valid_label = None
         self._test_data = None
-        logger.debug(f"Begin read data from {dataset_dir}")
+        log(f"Begin read data from {dataset_dir}", DEBUG)
         self._read_all()
         self._meta_info = self._get_meta()
 
@@ -54,7 +51,7 @@ class AutoEssayScoringDataset:
 
     @staticmethod
     def _read_dataset_by_id(path, set_id, use_cols=USE_COLUMNS):
-        logger.debug(f"Begin read data from {path}/{'all' if set_id is None else set_id}")
+        log(f"Begin read data from {path}/{'all' if set_id is None else set_id}", DEBUG)
         dataset = AutoEssayScoringDataset._read_dataset(path, use_columns=use_cols)
         dataset = AutoEssayScoringDataset._select_essay_set(dataset, set_id)
         return dataset
@@ -108,6 +105,7 @@ class AutoEssayScoringDataset:
         return dataset['essay'], dataset[label]
 
 
+@timeit
 def get_dataset(args):
     """get dataset"""
     dataset_dir = args.dataset_dir
@@ -118,7 +116,5 @@ def get_dataset(args):
 
 
 if __name__ == '__main__':
-    logger.info("Begin read dataset")
     dataset = AutoEssayScoringDataset("~/Project/AutoEssayScoring/essay_data", 2)
     tmp = dataset.all_train
-    logger.info("End read dataset")

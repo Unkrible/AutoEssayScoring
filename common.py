@@ -3,21 +3,25 @@
 import signal
 import math
 import logging
+import functools
 import os
 import time
 import sys
 from contextlib import contextmanager
+from typing import Any
+
+from constant import *
 
 
-def get_logger(verbosity_level, name, use_error_log=False):
+def get_logger(verbosity_level, use_error_log=False):
     """Set logging format to something like:
         2019-04-25 12:52:51,924 INFO score.py: <message>
     """
-    logger = logging.getLogger(name)
+    logger = logging.getLogger("AES")
     logging_level = getattr(logging, verbosity_level)
     logger.setLevel(logging_level)
     formatter = logging.Formatter(
-        fmt='%(asctime)s %(levelname)s %(filename)s: %(message)s'
+        fmt='%(asctime)s %(levelname)s: %(message)s'
     )
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setLevel(logging_level)
@@ -32,56 +36,52 @@ def get_logger(verbosity_level, name, use_error_log=False):
     return logger
 
 
+VERBOSITY_LEVEL = DEBUG
+_LOGGER = get_logger(VERBOSITY_LEVEL)
+
+nesting_level = 0
+
+_LOGGER_MAP = {
+    INFO: _LOGGER.info,
+    WARNING: _LOGGER.warning,
+    DEBUG: _LOGGER.debug,
+    ERROR: _LOGGER.error
+}
+
+
+def log(entry: Any, level=INFO):
+    global nesting_level
+    space = "-" * (4 * nesting_level)
+    _LOGGER_MAP[level](f"{space}{entry}")
+
+
+def timeit(method):
+    @functools.wraps(method)
+    def timed(*args, **kw):
+        global is_start
+        global nesting_level
+
+        class_name = ""
+        if len(args) > 0 and hasattr(args[0], '__class__'):
+            class_name = f"{args[0].__class__.__name__}."
+        is_start = True
+        log(f"Start [{class_name}{method.__name__}]:")
+        nesting_level += 1
+
+        start_time = time.time()
+        result = method(*args, **kw)
+        end_time = time.time()
+
+        nesting_level -= 1
+        log(f"End   [{class_name}{method.__name__}]. Time elapsed: {end_time - start_time:0.2f} sec.")
+        is_start = False
+
+        return result
+
+    return timed
+
+
 def _here(*args):
     """Helper function for getting the current directory of this script."""
     here = os.path.dirname(os.path.realpath(__file__))
     return os.path.abspath(os.path.join(here, *args))
-
-
-VERBOSITY_LEVEL = 'INFO'
-LOGGER = get_logger(VERBOSITY_LEVEL, __file__)
-
-
-class TimeoutException(Exception):
-    """timeoutexception"""
-
-
-class Timer:
-    """timer"""
-
-    def __init__(self):
-        self.duration = 0
-        self.total = None
-        self.remain = None
-        self.exec = None
-
-    def set(self, time_budget):
-        """set time_budget"""
-        self.total = time_budget
-        self.remain = time_budget
-        self.exec = 0
-
-    @contextmanager
-    def time_limit(self, pname):
-        """limit time"""
-
-        def signal_handler(signum, frame):
-            raise TimeoutException("Timed out!")
-
-        signal.signal(signal.SIGALRM, signal_handler)
-        signal.alarm(int(math.ceil(self.remain)))
-        start_time = time.time()
-
-        try:
-            yield
-        finally:
-            exec_time = time.time() - start_time
-            signal.alarm(0)
-            self.exec += exec_time
-            self.duration += exec_time
-            self.remain = self.total - self.exec
-
-        LOGGER.info(f'{pname} success, time spent so far {self.exec} sec')
-
-        if self.remain <= 0:
-            raise TimeoutException("Timed out!")

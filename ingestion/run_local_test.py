@@ -3,13 +3,13 @@ from pathlib import Path
 from common import log, _here
 from ingestion.dataset import get_dataset
 from ingestion.metrics import kappa
-from model.classifier import Model
+from models.model import Model
 
 
 def _parse_args():
     default_starting_kit_dir = Path(_here())
     default_dataset_dir = default_starting_kit_dir / 'essay_data'
-    default_code_dir = default_starting_kit_dir / 'model'
+    default_code_dir = default_starting_kit_dir / 'models'
     default_time_budget = 1200
 
     parser = argparse.ArgumentParser()
@@ -25,11 +25,11 @@ def _parse_args():
     parser.add_argument('--code_dir', type=str,
                         default=default_code_dir,
                         help="Directory storing the submission code "
-                             "`model.py` and other necessary packages.")
+                             "`models.py` and other necessary packages.")
 
     parser.add_argument("--time_budget", type=float,
                         default=default_time_budget,
-                        help="Time budget for training model if not specified"
+                        help="Time budget for training models if not specified"
                              " in info.json.")
 
     parser.add_argument("--test", type=bool,

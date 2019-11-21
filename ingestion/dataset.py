@@ -116,7 +116,11 @@ def get_dataset(args):
 
 
 if __name__ == '__main__':
+
     dataset = AutoEssayScoringDataset("D:\\essay_data", 1)
 
     print(dataset.train.data)
+    # dataset = AutoEssayScoringDataset("~/Project/AutoEssayScoring/essay_data", 2)
+    dataset = AutoEssayScoringDataset("../resources/essay_data", 2)
+
     tmp = dataset.all_train

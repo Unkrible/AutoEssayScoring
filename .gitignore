@@ -2,5 +2,6 @@ essay_data/
 .idea/
 .DS_Store
 __pycache__/
+resources/
 **/__pycache__/
 

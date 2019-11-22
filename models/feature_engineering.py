@@ -1,6 +1,7 @@
 from common import log, timeit
 from models.feature_common import *
 from ingestion.dataset import *
+import pickle
 import re
 from functools import reduce
 import pandas as pd
@@ -108,10 +109,12 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['intj'] = data.apply(lambda x: x['pos'].count('INTJ'), axis=1)
 
         data['formal_feature'] = data.apply(style_features, axis=1)
-        
+
+        return data
+
     def fit_transform(self, data):
         self.fit(data)
-        self.transform(data)
+        return self.transform(data)
 
 
     # syntax features:
@@ -128,5 +131,7 @@ if __name__ == "__main__":
     dataset = AutoEssayScoringDataset("../resources/essay_data", 2)
     train, label = dataset.train
     fe = TaskIndependentFeatureEngineer()
-    fe.transform(train)
+    train = fe.transform(train)
+
     print("Done~")
+    pickle.dump([train, label], open('../resources/dataframes/train_df.pl', 'wb'))

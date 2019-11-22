@@ -1,9 +1,17 @@
 from common import log, timeit
-from models.feature_common import _pos_tag, _gen_tfidf_matrix, _type_token_ratio
+from models.feature_common import _pos_tag, _gen_tfidf_matrix, _lemmalize
+from ingestion.dataset import *
 import re
 from functools import reduce
 import pandas as pd
+
 import nltk
+from nltk.stem import WordNetLemmatizer
+
+import language_check
+from spacy.lang.en.stop_words import STOP_WORDS
+import spacy
+from string import punctuation
 
 
 # TODO: 分词、去除停用词？、序列化、提取句法特征、提取词法特征(tf-idf)、提取语义特征
@@ -23,6 +31,7 @@ class FeatureEngineer:
         self.fit(data)
         self.transform(data)
 
+
 """
 Features proposed in paper:
 Task-Independent Features for Automated Essay Grading
@@ -40,25 +49,59 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
 
     @timeit
     def transform(self, data):
-        pass
+        data = data[:10]
+        data = pd.DataFrame({'essay_id': data.index, 'essay': data.values})
+
+        #纠正词法句法错误
+        tool = language_check.LanguageTool('en-US')
+        data['matches'] = data['essay'].apply(lambda v: tool.check(v))
+        data['corrections_num'] = data.apply(lambda l: len(l['matches']), axis=1)
+        data['corrected'] = data.apply(lambda l: language_check.correct(l['essay'], l['matches']), axis=1)
+
+        # 分词，对其做词性标注，命名实体识别
+        tokens, sents, lemma, pos, ner, stop_words = [], [], [], [], [], STOP_WORDS
+        nlp = spacy.load('en_core_web_sm')
+        for essay in nlp.pipe(data['corrected'], batch_size=2, n_threads=2):
+            if essay.is_parsed:
+                tokens.append([e.text for e in essay])
+                sents.append([sent.string.strip() for sent in essay.sents])
+                pos.append([e.pos_ for e in essay])
+                ner.append([e.text for e in essay.ents])
+                lemma.append([n.lemma_ for n in essay])
+            else:
+                tokens.append(None)
+                sents.append(None)
+                pos.append(None)
+                ner.append(None)
+                lemma.append(None)
+        data['tokens'], data['sents'], data['lemma'], data['pos'], data['ner'] = tokens, sents, lemma, pos, ner
+
+        # 提取各种特征
+        data['token_count'] = data.apply(lambda x: len(x['tokens']), axis=1)
+        data['unique_token_count'] = data.apply(lambda x: len(set(x['tokens'])), axis=1)
+        data['type_token_ratio'] = data.apply(lambda x: x['unique_token_count']/x['token_count'], axis=1)
+        data['sent_count'] = data.apply(lambda x: len(x['sents']), axis=1)
+        data['ner_count'] = data.apply(lambda x: len(x['ner']), axis=1)
+        data['comma'] = data.apply(lambda x: x['corrected'].count(','), axis=1)
+        data['quotation'] = data.apply(lambda x: x['corrected'].count('\'') + x['corrected'].count('\"'), axis=1)
+        data['exclamation'] = data.apply(lambda x: x['corrected'].count('!'), axis=1)
+        data['noun'] = data.apply(lambda x: x['pos'].count('NOUN'), axis=1)
+        data['adj'] = data.apply(lambda x: x['pos'].count('ADJ'), axis=1)
+        data['pron'] = data.apply(lambda x: x['pos'].count('PRON'), axis=1)
+        data['verb'] = data.apply(lambda x: x['pos'].count('VERB'), axis=1)
+        data['noun'] = data.apply(lambda x: x['pos'].count('NOUN'), axis=1)
+        data['cconj'] = data.apply(lambda x: x['pos'].count('CCONJ'), axis=1)
+        data['adv'] = data.apply(lambda x: x['pos'].count('ADV'), axis=1)
+        data['det'] = data.apply(lambda x: x['pos'].count('DET'), axis=1)
+        data['propn'] = data.apply(lambda x: x['pos'].count('PROPN'), axis=1)
+        data['num'] = data.apply(lambda x: x['pos'].count('NUM'), axis=1)
+        data['part'] = data.apply(lambda x: x['pos'].count('PART'), axis=1)
+        data['intj'] = data.apply(lambda x: x['pos'].count('INTJ'), axis=1)
 
     def fit_transform(self, data):
         self.fit(data)
         self.transform(data)
 
-    # return average sentence length in words and word length in characters
-    def _length_feature(self, essay):
-        sentences = re.split(r'\.|\?|!', essay)
-        sentences = [each.strip().split(' ') for each in sentences]
-        sentence_length = [len(x) for x in sentences]
-        word_length = [[len(x) for x in each] for each in sentences]
-        word_length = reduce(lambda x, y: x+y, word_length)
-        word_length = list(filter(lambda x: x != 0, word_length))
-        return sum(sentence_length)/len(sentence_length), sum(word_length)/len(word_length)
-
-    # the occurance of commas, quotations and exclamation marks
-    def _occurrence_feature(self, essay):
-        return essay.count(','), essay.count('!'), essay.count("\'")+essay.count("\"")
 
     # syntax features:
     # measuring the ratio of distinct parse trees to
@@ -80,35 +123,15 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
                 B += 1
         N = len(nltk.word_tokenize(essay))
         formal_feature = (A/N-B/N+100)/2
-        return formal_feature, _type_token_ratio(essay)
-
-
-    def _cohesion_features(self, essay):
-        pass
-
-    def _coherence_features(self,essay):
-        pass
-
-    def _error_features(self, essay):
-        pass
-
-    def _readability_features(self, essay):
-        pass
-
-    def _task_similarity_features(self, essay):
-        pass
-
-    def _set_dependent_features(self, essay):
-        pass
+        return formal_feature
 
 
 if __name__ == "__main__":
     s = "I am a student. I love playing basketball! Do you love that?"
 
+    dataset = AutoEssayScoringDataset("../resources/essay_data", 2)
+    train, label = dataset.train
     fe = TaskIndependentFeatureEngineer()
-    print(fe._length_feature(s)[0])
-
-    #fe = TaskIndependentFeatureEngineer()
-
-    print(_pos_tag(s))
+    fe.transform(train)
+    print("Done~")
 

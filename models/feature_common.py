@@ -64,19 +64,9 @@ def _gen_tfidf_matrix(data, vector_length, stopwords):
     return Series(tfidf)
 
 
-# 对essay做词性标注，返回词和词性元组的list
-def _pos_tag(essay):
-    text_list = nltk.word_tokenize(essay.lower())
-    english_punctuations = [',', '.', ':', ';', '?', '(', ')', '[', ']', '&', '!', '*', '@', '#', '$', '%']
-    text_list = [word for word in text_list if word not in english_punctuations]
-    nltk.pos_tag(text_list)
+# # 对essay做词性标注，返回词和词性元组的list
+# def _pos_tag(words_list):
+#     # english_punctuations = [',', '.', ':', ';', '?', '(', ')', '[', ']', '&', '!', '*', '@', '#', '$', '%']
+#     # words_list = [word for word in essay_words if word not in english_punctuations]
+#     return [each[1] for each in nltk.pos_tag(words_list)]
 
-
-# 统计essay的type token ratio
-def _type_token_ratio(essay):
-    text_list = nltk.word_tokenize(essay.lower())
-    word_lemmatizer = WordNetLemmatizer()
-    text_list = [word_lemmatizer.lemmatize(each) for each in text_list]
-    word_dict = _word_freq(text_list)
-    unique_word = [i for (i, v) in word_dict.items() if v == 1]
-    return len(unique_word)/len(word_dict)

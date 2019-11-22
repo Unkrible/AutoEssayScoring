@@ -25,7 +25,7 @@ def _word_freq(essay_words):
     return dict(Counter(essay_words))
 
 
-def _gen_tfidf_matrix(data, vector_length, stopwords):
+def gen_tfidf_matrix(data, vector_length, stopwords):
     re_space = re.compile(r'[\s+\?\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）]+')
     clean_data = dict()
     # 去停词，去标点符号
@@ -64,9 +64,23 @@ def _gen_tfidf_matrix(data, vector_length, stopwords):
     return Series(tfidf)
 
 
-# # 对essay做词性标注，返回词和词性元组的list
-# def _pos_tag(words_list):
-#     # english_punctuations = [',', '.', ':', ';', '?', '(', ')', '[', ']', '&', '!', '*', '@', '#', '$', '%']
-#     # words_list = [word for word in essay_words if word not in english_punctuations]
-#     return [each[1] for each in nltk.pos_tag(words_list)]
+# 对essay做词性标注，返回词和词性元组的list
+def pos_tag(words_list):
+    # english_punctuations = [',', '.', ':', ';', '?', '(', ')', '[', ']', '&', '!', '*', '@', '#', '$', '%']
+    # words_list = [word for word in essay_words if word not in english_punctuations]
+    return [each[1] for each in nltk.pos_tag(words_list)]
 
+
+# the relative ratio of POS-tags to detect style preferences of writers
+# together with the type token ratio to detect the diversity of vocabulary
+def style_features(x):
+    pos_tag_list = x['pos']
+    A, B = 0, 0
+    for each in pos_tag_list:
+        if each in ['NOUN', 'ADJ', 'DET']:
+            A += 1
+        if each in ['PRON', 'VERB', 'ADV']:
+            B += 1
+    N = x['token_count']
+    formal_feature = (A/N-B/N+100)/2
+    return formal_feature

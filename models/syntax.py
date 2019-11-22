@@ -41,7 +41,7 @@ if __name__ == '__main__':
     parser = StanfordParser(model_path=eng_model_path, path_to_models_jar=my_path_to_models_jar,
                             path_to_jar=my_path_to_jar)
 
-    s = parser.raw_parse("you are beautiful.")
+    s = parser.raw_parse("you are beautiful every time you are young")
     #print(s)
 
     for line in s:

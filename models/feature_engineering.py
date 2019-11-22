@@ -1,5 +1,5 @@
 from common import log, timeit
-from models.feature_common import _pos_tag, _gen_tfidf_matrix, _lemmalize
+from models.feature_common import *
 from ingestion.dataset import *
 import re
 from functools import reduce
@@ -85,6 +85,15 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['comma'] = data.apply(lambda x: x['corrected'].count(','), axis=1)
         data['quotation'] = data.apply(lambda x: x['corrected'].count('\'') + x['corrected'].count('\"'), axis=1)
         data['exclamation'] = data.apply(lambda x: x['corrected'].count('!'), axis=1)
+
+        data['organization'] = data.apply(lambda x: x['corrected'].count(r'@ORGANIZATION'), axis=1)
+        data['caps'] = data.apply(lambda x: x['corrected'].count(r'@CAPS'), axis=1)
+        data['person'] = data.apply(lambda x: x['corrected'].count(r'@PERSON'), axis=1)
+        data['location'] = data.apply(lambda x: x['corrected'].count(r'@LOCATION'), axis=1)
+        data['money'] = data.apply(lambda x: x['corrected'].count(r'@MONEY'), axis=1)
+        data['time'] = data.apply(lambda x: x['corrected'].count(r'@TIME'), axis=1)
+        data['date'] = data.apply(lambda x: x['corrected'].count(r'@DATE'), axis=1)
+        data['percent'] = data.apply(lambda x: x['corrected'].count(r'@PERCENT'), axis=1)
         data['noun'] = data.apply(lambda x: x['pos'].count('NOUN'), axis=1)
         data['adj'] = data.apply(lambda x: x['pos'].count('ADJ'), axis=1)
         data['pron'] = data.apply(lambda x: x['pos'].count('PRON'), axis=1)
@@ -98,6 +107,8 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['part'] = data.apply(lambda x: x['pos'].count('PART'), axis=1)
         data['intj'] = data.apply(lambda x: x['pos'].count('INTJ'), axis=1)
 
+        data['formal_feature'] = data.apply(style_features, axis=1)
+        
     def fit_transform(self, data):
         self.fit(data)
         self.transform(data)
@@ -110,20 +121,6 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
     # causal and temporal clauses
     def _syntax_features(self, essay):
         pass
-
-    # the relative ratio of POS-tags to detect style preferences of writers
-    # together with the type token ratio to detect the diversity of vocabulary
-    def _style_features(self, essay):
-        pos_tag_list = _pos_tag(essay)
-        A, B = 0, 0
-        for each in pos_tag_list:
-            if each in []:
-                A += 1
-            if each in []:
-                B += 1
-        N = len(nltk.word_tokenize(essay))
-        formal_feature = (A/N-B/N+100)/2
-        return formal_feature
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ import re
 from functools import reduce
 import pandas as pd
 import pickle
+import json
 
 import language_check
 from spacy.lang.en.stop_words import STOP_WORDS
@@ -94,11 +95,23 @@ if __name__ == "__main__":
 
         fe = SyntaxFeatureEngineer()
         train = fe.fit_transform(train)
-        # print(train['intj'])
-
         valid = fe.fit_transform(valid)
         test = fe.fit_transform(test)
-        to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
-        pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
+
+        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrections_num', 'corrected', 'essay']:
+            train.pop(each)
+        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrections_num', 'corrected', 'essay']:
+            valid.pop(each)
+        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrections_num', 'corrected', 'essay']:
+            test.pop(each)
+
+        # to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
+        train.to_csv('../resources/dataframes2/SyntaxFeatureLabelTrainSet' + str(set_id) + '.csv')
+        train_label.to_csv('../resources/dataframes2/SyntaxFeatureLabelTrainLabel' + str(set_id) + '.csv')
+        valid.to_csv('../resources/dataframes2/SyntaxFeatureLabelValidSet' + str(set_id) + '.csv')
+        valid_label.to_csv('../resources/dataframes2/SyntaxFeatureLabelValidLabel' + str(set_id) + '.csv')
+        test.to_csv('../resources/dataframes2/SyntaxFeatureLabelTestSet' + str(set_id) + '.csv')
+
+        # pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
         # break
     print("Done~")

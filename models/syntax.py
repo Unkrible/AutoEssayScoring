@@ -3,13 +3,14 @@ from nltk.parse.stanford import StanfordParser
 
 class SyntaxFeature:
     def __init__(self):
-        stanford_parser_dir = 'D:/stanford-parser-full-2018-10-17/'
-        eng_model_path = stanford_parser_dir + "stanford-parser-3.9.2-models/edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz"
-        my_path_to_models_jar = stanford_parser_dir + "stanford-parser-3.9.2-models.jar"
-        my_path_to_jar = stanford_parser_dir + "stanford-parser.jar"
-
-        self.parser = StanfordParser(model_path=eng_model_path, path_to_models_jar=my_path_to_models_jar,
-                                     path_to_jar=my_path_to_jar)
+        # stanford_parser_dir = 'D:/stanford-parser-full-2018-10-17/'
+        # eng_model_path = stanford_parser_dir + "stanford-parser-3.9.2-models/edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz"
+        # my_path_to_models_jar = stanford_parser_dir + "stanford-parser-3.9.2-models.jar"
+        # my_path_to_jar = stanford_parser_dir + "stanford-parser.jar"
+        #
+        # self.parser = StanfordParser(model_path=eng_model_path, path_to_models_jar=my_path_to_models_jar,
+        #                              path_to_jar=my_path_to_jar)
+        pass
 
     def _printList(self, list1):
         for elements in list1:

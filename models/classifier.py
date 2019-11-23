@@ -12,3 +12,7 @@ class Classifier(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def predict(self, data, *args, **kwargs):
         pass
+
+    @staticmethod
+    def hyper_params_search(dataset, *args, **kwargs):
+        pass

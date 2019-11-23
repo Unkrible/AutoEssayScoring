@@ -26,7 +26,7 @@ from sklearn.metrics import confusion_matrix, f1_score, SCORERS
 _CORRELATION_METRICS = frozenset(['kendall_tau', 'spearman', 'pearson'])
 
 
-def kappa(y_true, y_pred, weights=None, allow_off_by_one=False):
+def kappa(y_true, y_pred, weights="quadratic", allow_off_by_one=False):
     """
     Calculates the kappa inter-rater agreement between two the gold standard
     and the predicted ratings. Potential values range from -1 (representing

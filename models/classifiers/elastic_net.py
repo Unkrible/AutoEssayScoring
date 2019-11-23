@@ -11,18 +11,17 @@ class ElasticNetClassifier(Classifier):
 
     def __init__(self, *args, **kwargs):
         super(ElasticNetClassifier, self).__init__()
-        self._model = None
+        self._model = ElasticNet(*args, **kwargs, max_iter=10000, random_state=RANDOM_STATE)
 
     def fit(self, dataset, *args, **kwargs):
         x, y = dataset
-        self._model = ElasticNet(*args, **kwargs, max_iter=10000, random_state=RANDOM_STATE)
         self._model.fit(x, y)
 
     def predict(self, data, *args, **kwargs):
-        self._model.predict(data)
+        return self._model.predict(data)
 
     @staticmethod
-    def hyper_search(dataset, *args, **kwargs):
+    def hyper_params_search(dataset, *args, **kwargs):
         x, y = dataset
         hyper_space = {
             'l1_ratio': hp.choice('l1_ratio', [.01, .1, .5, .9]),

@@ -1,8 +1,8 @@
 from models.classifier import Classifier
 from models.feature_engineering import FeatureEngineer
 
-from common import log, timeit
-from models.svm_classifier import SVMClassifier
+from common import timeit
+from models.classifiers.svm_classifier import SVMClassifier
 
 
 class Model(Classifier):

@@ -11,6 +11,7 @@ from nltk.stem import WordNetLemmatizer
 import language_check
 from spacy.lang.en.stop_words import STOP_WORDS
 import spacy
+from models.syntax import SyntaxFeature
 from string import punctuation
 
 
@@ -108,7 +109,9 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['intj'] = data.apply(lambda x: x['pos'].count('INTJ'), axis=1)
 
         data['formal_feature'] = data.apply(style_features, axis=1)
-        
+
+        return data
+
     def fit_transform(self, data):
         self.fit(data)
         self.transform(data)
@@ -119,9 +122,83 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
     # all the trees and the average depths of the trees
     # and measure the proportion of subordinate,
     # causal and temporal clauses
-    def _syntax_features(self, essay):
+    '''
+    @timeit
+    def _syntax_features(self, data):
+        syn_feature=SyntaxFeature()
+        tree_depth_list=[]
+        for essay in data['sents']:
+            depth_list=[]
+            for sentence in essay:
+                #print(sentence)
+                depth=syn_feature.get_tree_depth(sentence)
+                depth_list.append(depth)
+                #print(depth)
+                #break
+            tree_depth_list.append(sum(depth_list) / len(depth_list))
+            #print(tree_depth_list)
+            #break
+        data['syntax_tree_depth']=tree_depth_list
+        print(data['syntax_tree_depth'])
+    '''
 
+class SyntaxFeatureEngineer(FeatureEngineer):
+    def __init__(self):
+        FeatureEngineer.__init__(self)
         pass
+
+    @timeit
+    def fit(self, data):
+        pass
+
+
+    def transform(self, data):
+        self._syntax_features(data)
+
+    # syntax features:
+    # measuring the ratio of distinct parse trees to
+    # all the trees and the average depths of the trees
+    # and measure the proportion of subordinate,
+    # causal and temporal clauses
+    @timeit
+    def _syntax_features(self, data):
+        syn_feature=SyntaxFeature()
+        '''
+        #syntax_tree_depth_feature
+        tree_depth_list=[]
+        for essay in data['sents']:
+            depth_list=[]
+            for sentence in essay:
+                depth=syn_feature.get_tree_depth(sentence)
+                depth_list.append(depth)
+            tree_depth_list.append(sum(depth_list) / len(depth_list))
+        data['syntax_tree_depth']=tree_depth_list
+        print(data['syntax_tree_depth'])
+        '''
+        #temporal_clauses_num_feature
+        temporal_clauses_num_list=[]
+        for essay in data['sents']:
+            temporal_clauses_num=0
+            for sentence in essay:
+                if syn_feature.is_temporal_clauses(sentence):
+                    temporal_clauses_num+=1
+            #print(temporal_clauses_num,len(essay))
+            temporal_clauses_num_list.append(temporal_clauses_num/len(essay))
+        data['temporal_clauses_num']=temporal_clauses_num_list
+        print(data['temporal_clauses_num'])
+        print(data['sents'][0])
+
+        # causal_clauses_num_feature
+        causal_clauses_num_list = []
+        for essay in data['sents']:
+            causal_clauses_num = 0
+            for sentence in essay:
+                if syn_feature.is_causal_clauses(sentence):
+                    causal_clauses_num += 1
+            #print(causal_clauses_num , len(essay))
+            causal_clauses_num_list.append(causal_clauses_num / len(essay))
+        data['causal_clauses_num'] = causal_clauses_num_list
+        print(data['causal_clauses_num'])
 
 
 if __name__ == "__main__":
@@ -130,6 +207,10 @@ if __name__ == "__main__":
     dataset = AutoEssayScoringDataset("../resources/essay_data", 2)
     train, label = dataset.train
     fe = TaskIndependentFeatureEngineer()
-    fe.transform(train)
+    data=fe.transform(train)
+
+    sfe=SyntaxFeatureEngineer()
+    sfe.transform(data)
+    print(label[0:10])
     print("Done~")
 

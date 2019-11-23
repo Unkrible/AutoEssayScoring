@@ -48,6 +48,7 @@ class AutoEssayScoringDataset:
             self._essay_set_id,
             use_cols=None
         )
+        self._test_data = self._test['essay']
 
     @staticmethod
     def _read_dataset_by_id(path, set_id, use_cols=USE_COLUMNS):

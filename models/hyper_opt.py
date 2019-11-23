@@ -5,7 +5,7 @@ from hyperopt import STATUS_OK, Trials, space_eval, tpe, fmin
 from common import log
 
 
-def hyper_opt(X, y, params, space, classifier_class, metric):
+def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=True, **kwargs):
     """
     Use bayesian opt to search hyper parameters
     :param X: dataset
@@ -14,6 +14,7 @@ def hyper_opt(X, y, params, space, classifier_class, metric):
     :param space: hyper parameters search space
     :param classifier_class: model class
     :param metric: function to calculate metric, should be func(y_true, y_pred, *args, **kwargs)
+    :param is_larger_better: whether the larger the metric, the better
     :return: best hyper parameters
     """
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=0)
@@ -23,17 +24,20 @@ def hyper_opt(X, y, params, space, classifier_class, metric):
         classifier.fit((X_train, y_train))
         y_pred = classifier.predict(X_val)
         score = metric(y_val, y_pred)
-
+        if is_larger_better:
+            score = -score
         return {'loss': score, 'status': STATUS_OK}
 
     trials = Trials()
-    best = fmin(fn=objective,
-                space=space,
-                trials=trials,
-                algo=tpe.suggest,
-                max_evals=5,
-                verbose=1,
-                rstate=np.random.RandomState(66)
+    best = fmin(
+        fn=objective,
+        space=space,
+        trials=trials,
+        algo=tpe.suggest,
+        max_evals=50,
+        verbose=1,
+        rstate=np.random.RandomState(66),
+        **kwargs
     )
 
     hyperparams = space_eval(space, best)

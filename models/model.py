@@ -25,7 +25,9 @@ class Model(Classifier):
         )
         hyper_params = ElasticNetClassifier.hyper_params_search(
             (x_hyper, y_hyper),
-            *args, **kwargs
+            *args,
+            max_evals=50,
+            **kwargs
         )
         self._model.fit((train_data, train_label), *args, **hyper_params)
 

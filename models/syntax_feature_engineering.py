@@ -12,6 +12,7 @@ import spacy
 from models.syntax import SyntaxFeature
 from models.feature_engineering import FeatureEngineer
 
+
 class SyntaxFeatureEngineer(FeatureEngineer):
     def __init__(self):
         FeatureEngineer.__init__(self)
@@ -22,13 +23,13 @@ class SyntaxFeatureEngineer(FeatureEngineer):
 
     @timeit
     def transform(self, data):
-        data=self._syntax_features(data)
+        data = self._syntax_features(data)
         return data
 
     def fit_transform(self, data):
         self.fit(data)
-        data=self.transform(data)
-        #print(data['sents'])
+        data = self.transform(data)
+        # print(data['sents'])
         return data
 
     # syntax features:
@@ -36,7 +37,7 @@ class SyntaxFeatureEngineer(FeatureEngineer):
     # and measure the proportion of causal and temporal clauses
     @timeit
     def _syntax_features(self, data):
-        syn_feature=SyntaxFeature()
+        syn_feature = SyntaxFeature()
         '''
         #syntax_tree_depth_feature
         tree_depth_list=[]
@@ -49,18 +50,18 @@ class SyntaxFeatureEngineer(FeatureEngineer):
         data['syntax_tree_depth']=tree_depth_list
         print(data['syntax_tree_depth'])
         '''
-        #temporal_clauses_ratio_feature
-        temporal_clauses_ratio_list=[]
+        # temporal_clauses_ratio_feature
+        temporal_clauses_ratio_list = []
         for essay in data['sents']:
-            temporal_clauses_ratio=0
+            temporal_clauses_ratio = 0
             for sentence in essay:
                 if syn_feature.is_temporal_clauses(sentence):
-                    temporal_clauses_ratio+=1
-            #print(temporal_clauses_ratio,len(essay))
-            temporal_clauses_ratio_list.append(temporal_clauses_ratio/len(essay))
-        data['temporal_clauses_ratio']=temporal_clauses_ratio_list
-        #print(data['temporal_clauses_ratio'])
-        #print(data['sents'][0])
+                    temporal_clauses_ratio += 1
+            # print(temporal_clauses_ratio,len(essay))
+            temporal_clauses_ratio_list.append(temporal_clauses_ratio / len(essay))
+        data['temporal_clauses_ratio'] = temporal_clauses_ratio_list
+        # print(data['temporal_clauses_ratio'])
+        # print(data['sents'][0])
 
         # causal_clauses_ratio_feature
         causal_clauses_ratio_list = []
@@ -69,11 +70,12 @@ class SyntaxFeatureEngineer(FeatureEngineer):
             for sentence in essay:
                 if syn_feature.is_causal_clauses(sentence):
                     causal_clauses_ratio += 1
-            #print(causal_clauses_ratio , len(essay))
+            # print(causal_clauses_ratio , len(essay))
             causal_clauses_ratio_list.append(causal_clauses_ratio / len(essay))
         data['causal_clauses_ratio'] = causal_clauses_ratio_list
-        #print(data['causal_clauses_ratio'])
+        # print(data['causal_clauses_ratio'])
         return data
+
 
 FeatureDatasets = namedtuple("FeatureDatasets", ['train', 'train_label', 'valid', 'valid_label', 'test'])
 
@@ -81,22 +83,22 @@ if __name__ == "__main__":
 
     for set_id in range(1, 9):
         print("Now for set %d" % set_id)
-        dataset=pickle.load(open('../resources/dataframes/TaskIndependentFeatureLabelSet'+str(set_id)+'.pl', 'rb'))
+        dataset = pickle.load(
+            open('../resources/dataframes/TaskIndependentFeatureLabelSet' + str(set_id) + '.pl', 'rb'))
 
         train = dataset[0]
-        train_label=dataset[1]
-        valid=dataset[2]
-        valid_label=dataset[3]
-        test=dataset[4]
+        train_label = dataset[1]
+        valid = dataset[2]
+        valid_label = dataset[3]
+        test = dataset[4]
 
         fe = SyntaxFeatureEngineer()
         train = fe.fit_transform(train)
-        #print(train['intj'])
+        # print(train['intj'])
 
         valid = fe.fit_transform(valid)
         test = fe.fit_transform(test)
-        to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test = test)
-        pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet'+str(set_id)+'.pl', 'wb'))
-        #break
+        to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
+        pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
+        # break
     print("Done~")
-

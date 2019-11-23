@@ -9,7 +9,7 @@ import pickle
 import language_check
 from spacy.lang.en.stop_words import STOP_WORDS
 import spacy
-from spacy_readability import Readability
+#from spacy_readability import Readability
 from string import punctuation
 
 

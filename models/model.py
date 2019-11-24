@@ -49,23 +49,23 @@ if __name__ == '__main__':
         0.7055995750817732
     ]
     start = 1
-    stop = 2
+    stop = 9
     my_kappas = []
     for set_id in range(start, stop):
         csv_params = {
             'index_col': ESSAY_INDEX,
             'dtype': {'domain1_score': np.float}
         }
-        train_data = pd.read_csv(f"../features/SyntaxFeatureLabelTrainSet{set_id}.csv", **csv_params)
-        train_label = pd.read_csv(f"../features/SyntaxFeatureLabelTrainLabel{set_id}.csv", **csv_params)
-        valid_data = pd.read_csv(f"../features/SyntaxFeatureLabelValidSet{set_id}.csv", **csv_params)
-        valid_label = pd.read_csv(f"../features/SyntaxFeatureLabelValidLabel{set_id}.csv", **csv_params)
-        test_data = pd.read_csv(f"../features/SyntaxFeatureLabelTestSet{set_id}.csv", **csv_params)
+        train_data = pd.read_csv(f"../features/TrainSet{set_id}.csv", **csv_params)
+        train_label = pd.read_csv(f"../features/TrainLabel{set_id}.csv", **csv_params)
+        valid_data = pd.read_csv(f"../features/ValidSet{set_id}.csv", **csv_params)
+        valid_label = pd.read_csv(f"../features/ValidLabel{set_id}.csv", **csv_params)
+        test_data = pd.read_csv(f"../features/TestSet{set_id}.csv", **csv_params)
         model = Model({})
         model.fit((train_data, train_label))
         y_preds = model.predict(valid_data)
         res = kappa(valid_label[ESSAY_LABEL].tolist(), y_preds)
         my_kappas.append(res)
-    df = pd.DataFrame({'Baseline': original_kappas[start - 1: stop - 1], 'Our solution': my_kappas})
+    df = pd.DataFrame({'Baseline': original_kappas[start - 1: stop - 1], "Our's": my_kappas})
     df['Improvement'] = df['Our solution'] - df['Baseline']
     print(f"Final result:\n{df}")

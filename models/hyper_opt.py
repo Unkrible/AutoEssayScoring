@@ -30,12 +30,12 @@ def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=Tr
         return {'loss': score, 'status': STATUS_OK}
 
     trials = Trials()
+    kwargs['max_evals'] = 50 if 'max_evals' not in kwargs else kwargs['max_evals']
     best = fmin(
         fn=objective,
         space=space,
         trials=trials,
         algo=tpe.suggest,
-        max_evals=50,
         verbose=1,
         rstate=np.random.RandomState(66),
         **kwargs

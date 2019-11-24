@@ -53,5 +53,5 @@ class LgbClassifier(Classifier):
             "reg_lambda": hp.uniform("reg_lambda", 0, 2),
             "min_child_weight": hp.uniform('min_child_weight', 0.5, 10),
         }
-        hyper_params = hyper_opt(x, y, {}, hyper_space, LgbClassifier, kappa)
+        hyper_params = hyper_opt(x, y, {}, hyper_space, LgbClassifier, kappa, max_evals=100)
         return hyper_params

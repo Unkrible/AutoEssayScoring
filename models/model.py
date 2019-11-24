@@ -40,6 +40,7 @@ if __name__ == '__main__':
     import numpy as np
     from constant import ESSAY_INDEX, ESSAY_LABEL
     from ingestion.metrics import kappa
+    from sklearn.feature_selection import SelectKBest
     original_kappas = [
         0.8026615360220601,
         0.6453843679639755,
@@ -53,6 +54,7 @@ if __name__ == '__main__':
     start = 1
     stop = 9
     my_kappas = []
+    weights = np.zeros(stop - start, dtype=np.float)
     for set_id in range(start, stop):
         csv_params = {
             'index_col': ESSAY_INDEX,
@@ -63,12 +65,21 @@ if __name__ == '__main__':
         valid_data = pd.read_csv(f"../features/ValidSet{set_id}.csv", **csv_params)
         valid_label = pd.read_csv(f"../features/ValidLabel{set_id}.csv", **csv_params)
         test_data = pd.read_csv(f"../features/TestSet{set_id}.csv", **csv_params)
+        selectK = SelectKBest(k=15)
+        # data = pd.concat([train_data, valid_data])
+        # label = pd.concat([train_label, valid_label])
+        data = train_data
+        label = train_label
+        data = selectK.fit_transform(data, label)
         model = Model({}, LgbClassifier)
-        model.fit((train_data, train_label))
-        y_preds = model.predict(valid_data)
+        model.fit((data, label))
+        y_preds = model.predict(selectK.transform(valid_data))
         res = kappa(valid_label[ESSAY_LABEL].tolist(), y_preds)
         my_kappas.append(res)
+        weights[set_id - start] = len(valid_label)
     df = pd.DataFrame({'Baseline': original_kappas[start - 1: stop - 1], "Our's": my_kappas})
     df['Improvement'] = df["Our's"] - df['Baseline']
+    weights = weights / np.sum(weights)
+    df['Set Weight'] = weights
     print(f"Final result:\n{df}")
-    print(f"{np.mean(my_kappas)}")
+    print(f"{np.average(my_kappas, weights=weights)}")

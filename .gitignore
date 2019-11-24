@@ -5,4 +5,5 @@ __pycache__/
 resources/
 **/__pycache__/
 features/
+*.tsv
 

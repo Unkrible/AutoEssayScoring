@@ -5,22 +5,24 @@ from constant import RANDOM_STATE
 from models.classifier import Classifier
 from models.classifiers.svm_classifier import SVMClassifier
 from models.classifiers.elastic_net import ElasticNetClassifier
+from models.classifiers.lgb_classifier import LgbClassifier
 
 
 class Model(Classifier):
-    def __init__(self, metadata, *args, **kwargs):
+    def __init__(self, metadata, classifier_class, *args, **kwargs):
         super(Model, self).__init__(*args, **kwargs)
         self._meta = metadata
-        self._model = ElasticNetClassifier(*args, **kwargs)
+        self._model_class = classifier_class
+        self._model = classifier_class(*args, **kwargs)
 
     @timeit
     def fit(self, dataset, *args, **kwargs):
         train_data, train_label = dataset
         x_hyper, _, y_hyper, _ = train_test_split(
             train_data, train_label,
-            test_size=0.7, random_state=RANDOM_STATE
+            test_size=0.2, random_state=RANDOM_STATE
         )
-        hyper_params = ElasticNetClassifier.hyper_params_search(
+        hyper_params = self._model_class.hyper_params_search(
             (x_hyper, y_hyper),
             *args,
             max_evals=50,
@@ -61,11 +63,12 @@ if __name__ == '__main__':
         valid_data = pd.read_csv(f"../features/ValidSet{set_id}.csv", **csv_params)
         valid_label = pd.read_csv(f"../features/ValidLabel{set_id}.csv", **csv_params)
         test_data = pd.read_csv(f"../features/TestSet{set_id}.csv", **csv_params)
-        model = Model({})
+        model = Model({}, LgbClassifier)
         model.fit((train_data, train_label))
         y_preds = model.predict(valid_data)
         res = kappa(valid_label[ESSAY_LABEL].tolist(), y_preds)
         my_kappas.append(res)
     df = pd.DataFrame({'Baseline': original_kappas[start - 1: stop - 1], "Our's": my_kappas})
-    df['Improvement'] = df['Our solution'] - df['Baseline']
+    df['Improvement'] = df["Our's"] - df['Baseline']
     print(f"Final result:\n{df}")
+    print(f"{np.mean(my_kappas)}")

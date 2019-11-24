@@ -24,8 +24,8 @@ class ElasticNetClassifier(Classifier):
     def hyper_params_search(dataset, *args, **kwargs):
         x, y = dataset
         hyper_space = {
-            'l1_ratio': hp.choice('l1_ratio', [.01, .1, .5, .9]),
-            'alpha': hp.choice('alpha', [.01, .1, 1])
+            'l1_ratio': hp.uniform('l1_ratio', .01, .9),
+            'alpha': hp.uniform('alpha', .01, 1)
         }
         hyper_params = hyper_opt(x, y, {}, hyper_space, ElasticNetClassifier, kappa)
         return hyper_params

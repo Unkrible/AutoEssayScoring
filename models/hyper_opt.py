@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from hyperopt import STATUS_OK, Trials, space_eval, tpe, fmin
 
 from common import log
+from constant import ESSAY_LABEL
 
 
 def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=True, **kwargs):
@@ -20,21 +21,21 @@ def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=Tr
     X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=0)
 
     def objective(hyperparams):
-        classifier = classifier_class({**params, **hyperparams})
+        classifier = classifier_class(**{**params, **hyperparams})
         classifier.fit((X_train, y_train))
         y_pred = classifier.predict(X_val)
-        score = metric(y_val, y_pred)
+        score = metric(y_val[ESSAY_LABEL].tolist(), y_pred)
         if is_larger_better:
             score = -score
         return {'loss': score, 'status': STATUS_OK}
 
     trials = Trials()
+    kwargs['max_evals'] = 50 if 'max_evals' not in kwargs else kwargs['max_evals']
     best = fmin(
         fn=objective,
         space=space,
         trials=trials,
         algo=tpe.suggest,
-        max_evals=50,
         verbose=1,
         rstate=np.random.RandomState(66),
         **kwargs
@@ -42,6 +43,6 @@ def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=Tr
 
     hyperparams = space_eval(space, best)
 
-    log(f"{metric.__func__} = {-trials.best_trial['result']['loss']:0.4f} {hyperparams}")
+    log(f"{metric.__name__} = {-trials.best_trial['result']['loss']:0.4f} {hyperparams}")
 
     return hyperparams

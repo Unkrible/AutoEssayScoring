@@ -102,7 +102,9 @@ class AutoEssayScoringDataset:
             return dataset
 
     @staticmethod
-    def _data_label_split(dataset, label=ESSAY_LABEL):
+    def _data_label_split(dataset, label=None):
+        if label is None:
+            label = [ESSAY_LABEL, RATER1_LABEL, RATER2_LABEL]
         return dataset['essay'], dataset[label]
 
 
@@ -117,6 +119,11 @@ def get_dataset(args):
 
 
 if __name__ == '__main__':
+
+    dataset = AutoEssayScoringDataset("../essay_data", 1)
+
+    print(dataset.train.data)
     # dataset = AutoEssayScoringDataset("~/Project/AutoEssayScoring/essay_data", 2)
     dataset = AutoEssayScoringDataset("../resources/essay_data", 2)
+
     tmp = dataset.all_train

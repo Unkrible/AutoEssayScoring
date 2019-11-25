@@ -36,7 +36,7 @@ def gen_tfidf_matrix(data, vector_length, stopwords):
     # word_freq统计所有单词的词频, word_docs统计每个单词在多少文档中出现过
     word_freq, word_docs = dict(), dict()
     for (i, text) in clean_data.items():
-        text_words = list(filter(lambda x: x!='', text.split(' ')))
+        text_words = list(filter(lambda x: x != '', text.split(' ')))
         essay_word_freq = _word_freq(text_words)
         for item in essay_word_freq.items():
             if item[0] in word_freq:
@@ -59,7 +59,7 @@ def gen_tfidf_matrix(data, vector_length, stopwords):
         for index in range(len(words_select)):
             word = words_select[index]
             if word in essay_word_freq:
-                vector[index] = essay_word_freq[word]*math.log(len(data)/doc_freq[word], 10)
+                vector[index] = essay_word_freq[word] * math.log(len(data) / doc_freq[word], 10)
         tfidf[i] = vector
     return Series(tfidf)
 
@@ -82,5 +82,5 @@ def style_features(x):
         if each in ['PRON', 'VERB', 'ADV']:
             B += 1
     N = x['token_count']
-    formal_feature = (A/N-B/N+100)/2
+    formal_feature = (A / N - B / N + 100) / 2
     return formal_feature

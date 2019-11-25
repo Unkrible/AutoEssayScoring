@@ -38,6 +38,8 @@ Task-Independent Features for Automated Essay Grading
 Visit https://www.researchgate.net/publication/278383803_Task-Independent_Features_for_Automated_Essay_Grading
 for details. 
 """
+
+
 class TaskIndependentFeatureEngineer(FeatureEngineer):
     def __init__(self):
         FeatureEngineer.__init__(self)
@@ -51,7 +53,7 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data = data[:]
         data = pd.DataFrame({'essay_id': data.index, 'essay': data.values})
 
-        #纠正词法句法错误
+        # 纠正词法句法错误
         tool = language_check.LanguageTool('en-US')
         data['matches'] = data['essay'].apply(lambda v: tool.check(v))
         data['corrections_num'] = data.apply(lambda l: len(l['matches']), axis=1)
@@ -94,13 +96,14 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         # 词性标注，命名实体识别，词根化，分词断句
         data['tokens'], data['sents'], data['lemma'], data['pos'], data['ner'] = tokens, sents, lemma, pos, ner
         # 可读性特征
-        data['flesch_kincaid_grade_level'], data['flesch_kincaid_reading_ease'], data['dale_chall'], data['smog'], data['coleman_liau_index'], data['automated_readability_index'], data['forcast'] = \
+        data['flesch_kincaid_grade_level'], data['flesch_kincaid_reading_ease'], data['dale_chall'], data['smog'], data[
+            'coleman_liau_index'], data['automated_readability_index'], data['forcast'] = \
             flesch_kincaid_grade_level, flesch_kincaid_reading_ease, dale_chall, smog, coleman_liau_index, automated_readability_index, forcast
 
         # 提取各种特征
         data['token_count'] = data.apply(lambda x: len(x['tokens']), axis=1)
         data['unique_token_count'] = data.apply(lambda x: len(set(x['tokens'])), axis=1)
-        data['type_token_ratio'] = data.apply(lambda x: x['unique_token_count']/x['token_count'], axis=1)
+        data['type_token_ratio'] = data.apply(lambda x: x['unique_token_count'] / x['token_count'], axis=1)
         data['sent_count'] = data.apply(lambda x: len(x['sents']), axis=1)
         data['ner_count'] = data.apply(lambda x: len(x['ner']), axis=1)
         data['comma'] = data.apply(lambda x: x['corrected'].count(','), axis=1)
@@ -115,6 +118,8 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['time'] = data.apply(lambda x: x['corrected'].count(r'@TIME'), axis=1)
         data['date'] = data.apply(lambda x: x['corrected'].count(r'@DATE'), axis=1)
         data['percent'] = data.apply(lambda x: x['corrected'].count(r'@PERCENT'), axis=1)
+        data['at_num'] = data.apply(lambda x: x['corrected'].count(r'@NUM'), axis=1)
+
         data['noun'] = data.apply(lambda x: x['pos'].count('NOUN'), axis=1)
         data['adj'] = data.apply(lambda x: x['pos'].count('ADJ'), axis=1)
         data['pron'] = data.apply(lambda x: x['pos'].count('PRON'), axis=1)
@@ -128,6 +133,9 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['num'] = data.apply(lambda x: x['pos'].count('NUM'), axis=1)
         data['part'] = data.apply(lambda x: x['pos'].count('PART'), axis=1)
         data['intj'] = data.apply(lambda x: x['pos'].count('INTJ'), axis=1)
+        data['aux'] = data.apply(lambda x: x['pos'].count('AUX'), axis=1)
+        data['adp'] = data.apply(lambda x: x['pos'].count('ADP'), axis=1)
+        data['punct'] = data.apply(lambda x: x['pos'].count('PUNCT'), axis=1)
 
         data['formal'] = data.apply(style_features, axis=1)
 
@@ -149,9 +157,8 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
 
 FeatureDatasets = namedtuple("FeatureDatasets", ['train', 'train_label', 'valid', 'valid_label', 'test'])
 
-
 if __name__ == "__main__":
-    #s = "I am a student. I love playing basketball! Do you love that?"
+    # s = "I am a student. I love playing basketball! Do you love that?"
     for set_id in range(1, 9):
         print("Now for set %d" % set_id)
         dataset = AutoEssayScoringDataset("../resources/essay_data", essay_set_id=set_id)
@@ -162,7 +169,7 @@ if __name__ == "__main__":
         fe = TaskIndependentFeatureEngineer()
         train = fe.fit_transform(train)
         valid = fe.fit_transform(valid)
-        test  = fe.fit_transform(test)
-        to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test = test)
-        pickle.dump(to_save, open('../resources/dataframes/TaskIndependentFeatureLabelSet'+str(set_id)+'.pl', 'wb'))
+        test = fe.fit_transform(test)
+        to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
+        pickle.dump(to_save, open('../resources/dataframes/TaskIndependentFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
     print("Done~")

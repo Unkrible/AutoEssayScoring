@@ -4,4 +4,6 @@ essay_data/
 __pycache__/
 resources/
 **/__pycache__/
+features/
+*.tsv
 

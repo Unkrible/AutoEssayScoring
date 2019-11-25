@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.feature_selection import SelectKBest
 
 from constant import ESSAY_INDEX, ESSAY_LABEL
 from ingestion.metrics import kappa
@@ -25,16 +26,17 @@ if __name__ == '__main__':
         label = pd.concat([train_label, valid_label])
         # data = train_data
         # label = train_label
+        selectK = SelectKBest(k=30)
         model = Model({}, LgbClassifier)
+        data = selectK.fit_transform(data, label[ESSAY_LABEL])
         model.fit((data, label))
-        valid_preds = model.predict(valid_data)
-        print(f"Set {set_id}'s kappa: {kappa(valid_label[ESSAY_LABEL], valid_preds)}")
-        test_preds = model.predict(test_data)
+        test_preds = model.predict(selectK.transform(test_data))
         tmp = pd.DataFrame({'Essay-ID': test_data.index})
         tmp.set_index('Essay-ID', drop=True, inplace=True)
         tmp['Essay-Set'] = set_id
         tmp['Prediction'] = test_preds
         result.append(tmp)
     result = pd.concat(result)
+    result['Prediction'] = result['Prediction'].apply(np.round)
     result.to_csv('MG1933078.tsv', sep='\t', header=False)
     print(result)

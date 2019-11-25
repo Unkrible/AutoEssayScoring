@@ -54,7 +54,8 @@ if __name__ == '__main__':
     start = 1
     stop = 9
     my_kappas = []
-    weights = np.zeros(stop - start, dtype=np.float)
+    weights = np.ones(stop - start, dtype=np.float)
+    y_hat = []
     for set_id in range(start, stop):
         csv_params = {
             'index_col': ESSAY_INDEX,
@@ -65,18 +66,20 @@ if __name__ == '__main__':
         valid_data = pd.read_csv(f"../features/ValidSet{set_id}.csv", **csv_params)
         valid_label = pd.read_csv(f"../features/ValidLabel{set_id}.csv", **csv_params)
         test_data = pd.read_csv(f"../features/TestSet{set_id}.csv", **csv_params)
-        selectK = SelectKBest(k=15)
-        # data = pd.concat([train_data, valid_data])
-        # label = pd.concat([train_label, valid_label])
-        data = train_data
-        label = train_label
-        data = selectK.fit_transform(data, label)
+        test_label = pd.read_csv(f"../features/TestLabel{set_id}.csv", **csv_params)
+        selectK = SelectKBest(k=30)
+        data = pd.concat([train_data, valid_data])
+        label = pd.concat([train_label, valid_label])
+        # data = train_data
+        # label = train_label
+        data = selectK.fit_transform(data, label[ESSAY_LABEL])
         model = Model({}, LgbClassifier)
         model.fit((data, label))
-        y_preds = model.predict(selectK.transform(valid_data))
-        res = kappa(valid_label[ESSAY_LABEL].tolist(), y_preds)
+        y_preds = model.predict(selectK.transform(test_data))
+        y_hat.append(y_preds)
+        res = kappa(test_label[ESSAY_LABEL].tolist(), y_preds)
         my_kappas.append(res)
-        weights[set_id - start] = len(valid_label)
+        # weights[set_id - start] = len(valid_label)
     df = pd.DataFrame({'Baseline': original_kappas[start - 1: stop - 1], "Our's": my_kappas})
     df['Improvement'] = df["Our's"] - df['Baseline']
     weights = weights / np.sum(weights)

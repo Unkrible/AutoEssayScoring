@@ -3,7 +3,6 @@ from sklearn.model_selection import train_test_split
 from hyperopt import STATUS_OK, Trials, space_eval, tpe, fmin
 
 from common import log
-from constant import ESSAY_LABEL
 
 
 def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=True, **kwargs):
@@ -24,7 +23,7 @@ def hyper_opt(X, y, params, space, classifier_class, metric, is_larger_better=Tr
         classifier = classifier_class(**{**params, **hyperparams})
         classifier.fit((X_train, y_train))
         y_pred = classifier.predict(X_val)
-        score = metric(y_val[ESSAY_LABEL].tolist(), y_pred)
+        score = metric(y_val.tolist(), y_pred)
         if is_larger_better:
             score = -score
         return {'loss': score, 'status': STATUS_OK}

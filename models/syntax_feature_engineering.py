@@ -78,6 +78,28 @@ class SyntaxFeatureEngineer(FeatureEngineer):
         return data
 
 
+def normalization(df, ignore=None, eps=0.00000001):
+    columns_name = df.columns.values.tolist()
+    for each in columns_name:
+        MIN, MAX = min(df[each]), max(df[each])
+        if each in ignore:
+            continue
+        d = df[each].apply(lambda x: (x-MIN)/(MAX-MIN+eps))
+        df.drop(each, axis=1)
+        df[each] = d
+    return df
+
+
+def read_test_labels(test_label_path, set_index):
+    df = pd.read_csv(test_label_path, sep='\t')
+    for each in df.columns.values.tolist():
+        if each not in ['essay_id', 'essay_set', 'domain1_score']:
+            df.pop(each)
+    df = df[df['essay_set'] == set_index]
+    df.pop('essay_set')
+    return df
+
+
 FeatureDatasets = namedtuple("FeatureDatasets", ['train', 'train_label', 'valid', 'valid_label', 'test'])
 
 if __name__ == "__main__":
@@ -98,20 +120,33 @@ if __name__ == "__main__":
         valid = fe.fit_transform(valid)
         test = fe.fit_transform(test)
 
-        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrections_num', 'corrected', 'essay']:
+        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrected', 'essay']:
             train.pop(each)
-        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrections_num', 'corrected', 'essay']:
+        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrected', 'essay']:
             valid.pop(each)
-        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrections_num', 'corrected', 'essay']:
+        for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrected', 'essay']:
             test.pop(each)
 
-        # to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
-        train.to_csv('../resources/dataframes2/SyntaxFeatureLabelTrainSet' + str(set_id) + '.csv')
-        train_label.to_csv('../resources/dataframes2/SyntaxFeatureLabelTrainLabel' + str(set_id) + '.csv')
-        valid.to_csv('../resources/dataframes2/SyntaxFeatureLabelValidSet' + str(set_id) + '.csv')
-        valid_label.to_csv('../resources/dataframes2/SyntaxFeatureLabelValidLabel' + str(set_id) + '.csv')
-        test.to_csv('../resources/dataframes2/SyntaxFeatureLabelTestSet' + str(set_id) + '.csv')
+        train_len, valid_len, test_len = len(train), len(valid), len(test)
+        all_data = pd.concat([train, valid, test])
+        all_data = normalization(all_data, ignore=['essay_id'])
+        train, valid, test = \
+            all_data[:train_len], all_data[train_len: train_len+valid_len], all_data[train_len+valid_len:]
 
+        assert(len(train)==len(train_label) and len(valid)==len(valid_label) and len(test)==test_len)
+
+        # to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
+        train.to_csv('../resources/dataframes2/TrainSet' + str(set_id) + '.csv', index=False)
+        train_label = pd.DataFrame({'essay_id': train_label.index, 'domain1_score': train_label.values})
+        train_label.to_csv('../resources/dataframes2/TrainLabel' + str(set_id) + '.csv', index=False)
+
+        valid.to_csv('../resources/dataframes2/ValidSet' + str(set_id) + '.csv', index=False)
+        valid_label = pd.DataFrame({'essay_id': valid_label.index, 'domain1_score': valid_label.values})
+        valid_label.to_csv('../resources/dataframes2/ValidLabel' + str(set_id) + '.csv', index=False)
+
+        test.to_csv('../resources/dataframes2/TestSet' + str(set_id) + '.csv', index=False)
+        test_label = read_test_labels('../resources/essay_data/test.tsv', set_id)
+        test_label.to_csv('../resources/dataframes2/TestLabel'+str(set_id)+'.csv', index=False)
         # pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
         # break
     print("Done~")

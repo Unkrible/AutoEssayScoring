@@ -117,6 +117,8 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['time'] = data.apply(lambda x: x['corrected'].count(r'@TIME'), axis=1)
         data['date'] = data.apply(lambda x: x['corrected'].count(r'@DATE'), axis=1)
         data['percent'] = data.apply(lambda x: x['corrected'].count(r'@PERCENT'), axis=1)
+        data['at_num'] = data.apply(lambda x: x['corrected'].count(r'@NUM'), axis=1)
+
         data['noun'] = data.apply(lambda x: x['pos'].count('NOUN'), axis=1)
         data['adj'] = data.apply(lambda x: x['pos'].count('ADJ'), axis=1)
         data['pron'] = data.apply(lambda x: x['pos'].count('PRON'), axis=1)
@@ -130,6 +132,9 @@ class TaskIndependentFeatureEngineer(FeatureEngineer):
         data['num'] = data.apply(lambda x: x['pos'].count('NUM'), axis=1)
         data['part'] = data.apply(lambda x: x['pos'].count('PART'), axis=1)
         data['intj'] = data.apply(lambda x: x['pos'].count('INTJ'), axis=1)
+        data['aux'] = data.apply(lambda x: x['pos'].count('AUX'), axis=1)
+        data['adp'] = data.apply(lambda x: x['pos'].count('ADP'), axis=1)
+        data['punct'] = data.apply(lambda x: x['pos'].count('PUNCT'), axis=1)
 
         data['formal'] = data.apply(style_features, axis=1)
 

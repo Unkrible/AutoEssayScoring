@@ -93,7 +93,7 @@ def normalization(df, ignore=None, eps=0.00000001):
 def read_test_labels(test_label_path, set_index):
     df = pd.read_csv(test_label_path, sep='\t')
     for each in df.columns.values.tolist():
-        if each not in ['essay_id', 'essay_set', 'domain1_score']:
+        if each not in ['essay_id', 'essay_set', 'domain1_score', 'rater1_domain1', 'rater2_domain1']:
             df.pop(each)
     df = df[df['essay_set'] == set_index]
     df.pop('essay_set')
@@ -109,16 +109,18 @@ if __name__ == "__main__":
         dataset = pickle.load(
             open('../resources/dataframes/TaskIndependentFeatureLabelSet' + str(set_id) + '.pl', 'rb'))
 
-        train = dataset[0]
-        train_label = dataset[1]
-        valid = dataset[2]
-        valid_label = dataset[3]
-        test = dataset[4]
+        train = dataset.train
+        valid = dataset.valid
+        test = dataset.test
 
         fe = SyntaxFeatureEngineer()
         train = fe.fit_transform(train)
         valid = fe.fit_transform(valid)
         test = fe.fit_transform(test)
+
+        train_label = read_test_labels('../resources/essay_data/train.tsv', set_id)
+        valid_label = read_test_labels('../resources/essay_data/dev.tsv', set_id)
+        test_label = read_test_labels('../resources/essay_data/test.tsv', set_id)
 
         for each in ['tokens', 'sents', 'lemma', 'pos', 'ner', 'matches', 'corrected', 'essay']:
             train.pop(each)
@@ -137,15 +139,12 @@ if __name__ == "__main__":
 
         # to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
         train.to_csv('../resources/dataframes2/TrainSet' + str(set_id) + '.csv', index=False)
-        train_label = pd.DataFrame({'essay_id': train_label.index, 'domain1_score': train_label.values})
         train_label.to_csv('../resources/dataframes2/TrainLabel' + str(set_id) + '.csv', index=False)
 
         valid.to_csv('../resources/dataframes2/ValidSet' + str(set_id) + '.csv', index=False)
-        valid_label = pd.DataFrame({'essay_id': valid_label.index, 'domain1_score': valid_label.values})
         valid_label.to_csv('../resources/dataframes2/ValidLabel' + str(set_id) + '.csv', index=False)
 
         test.to_csv('../resources/dataframes2/TestSet' + str(set_id) + '.csv', index=False)
-        test_label = read_test_labels('../resources/essay_data/test.tsv', set_id)
         test_label.to_csv('../resources/dataframes2/TestLabel'+str(set_id)+'.csv', index=False)
         # pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
         # break

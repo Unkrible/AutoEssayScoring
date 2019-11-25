@@ -26,11 +26,9 @@ if __name__ == '__main__':
         label = pd.concat([train_label, valid_label])
         # data = train_data
         # label = train_label
-        selectK = SelectKBest(k=30)
         model = Model({}, LgbClassifier)
-        data = selectK.fit_transform(data, label[ESSAY_LABEL])
         model.fit((data, label))
-        test_preds = model.predict(selectK.transform(test_data))
+        test_preds = model.predict(test_data)
         tmp = pd.DataFrame({'Essay-ID': test_data.index})
         tmp.set_index('Essay-ID', drop=True, inplace=True)
         tmp['Essay-Set'] = set_id

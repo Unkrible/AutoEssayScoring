@@ -42,27 +42,14 @@ class Model(Classifier):
 if __name__ == '__main__':
     import pandas as pd
     import numpy as np
-    from itertools import combinations
 
     from constant import ESSAY_INDEX, ESSAY_LABEL
-    from ingestion.metrics import kappa
 
     feature_sets = ["hisk", "hisk-15", "features"]
-    original_kappas = [
-        0.8026615360220601,
-        0.6453843679639755,
-        0.6675004632203076,
-        0.6201412784903135,
-        0.7983501888241695,
-        0.6810744597077609,
-        0.733541110264561,
-        0.7055995750817732
-    ]
     start = 1
     stop = 9
-    my_kappas = []
-    weights = np.ones(stop - start, dtype=np.float)
     result = []
+    final_choose = [None, [4], [1, 4], [2, 3, 4], [3], [4], [1, 3], [1], [2, 4]]
     for set_id in range(start, stop):
         csv_params = {
             'index_col': ESSAY_INDEX,
@@ -75,7 +62,6 @@ if __name__ == '__main__':
             valid_data = pd.read_csv(f"../{feature_set}/ValidSet{set_id}.csv", **csv_params)
             valid_label = pd.read_csv(f"../{feature_set}/ValidLabel{set_id}.csv", **csv_params)
             test_data = pd.read_csv(f"../{feature_set}/TestSet{set_id}.csv", **csv_params)
-            test_label = pd.read_csv(f"../{feature_set}/TestLabel{set_id}.csv", **csv_params)
 
             data = pd.concat([train_data, valid_data])
             label = pd.concat([train_label, valid_label])
@@ -86,35 +72,15 @@ if __name__ == '__main__':
             model2 = Model({}, ElasticNetClassifier, hyper_search=False)
             model2.fit((data, label[ESSAY_LABEL]))
             y_preds.append(model2.predict(test_data))
-        ensemble_results = []
-        candidates = []
-        for i in range(1, len(y_preds) + 1):
-            candidates += list(combinations(range(len(y_preds)), i))
-        y_hat = None
-        y_kappa = 0
-        for combination in candidates:
-            preds = [y_preds[i] for i in combination]
-            pred = np.average(preds, axis=0)
-            tmp_kappa = kappa(test_label[ESSAY_LABEL].tolist(), pred)
-            if y_hat is None or tmp_kappa > y_kappa:
-                y_hat = pred
-                y_kappa = tmp_kappa
+        y_hat = np.average([y_preds[i] for i in final_choose[set_id]], axis=0)
 
-        res = kappa(test_label[ESSAY_LABEL].tolist(), y_hat)
-        my_kappas.append(res)
         tmp = pd.DataFrame({ESSAY_INDEX: test_data.index})
         tmp.set_index(ESSAY_INDEX, drop=True, inplace=True)
         tmp['essay_set'] = set_id
         tmp['pred'] = y_hat
         result.append(tmp)
-        print(f"Current kappas: {my_kappas}")
         # weights[set_id - start] = len(valid_label)
-    df = pd.DataFrame({'Baseline': original_kappas[start - 1: stop - 1], "Our's": my_kappas})
-    df['Improvement'] = df["Our's"] - df['Baseline']
-    weights = weights / np.sum(weights)
-    df['Set Weight'] = weights
-    print(f"Final result:\n{df}")
-    print(f"{np.average(my_kappas, weights=weights)}")
     result = pd.concat(result)
     result['pred'] = result['pred'].apply(np.round)
     result.to_csv('MG1933078.tsv', sep='\t', header=False)
+    print(final_choose)

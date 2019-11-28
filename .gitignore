@@ -6,5 +6,5 @@ resources/
 **/__pycache__/
 features/
 *.tsv
-hisk/
+hisk*/
 

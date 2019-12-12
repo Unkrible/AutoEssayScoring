@@ -50,7 +50,7 @@ if __name__ == '__main__':
     feature_sets = ["hisk"]
     start = 1
     stop = 9
-    results= []
+    results = []
     for set_id in range(start, stop):
         csv_params = {
             'index_col': ESSAY_INDEX,

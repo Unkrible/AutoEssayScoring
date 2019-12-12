@@ -9,13 +9,13 @@ from models.hyper_opt import hyper_opt
 
 
 def _cnn_lstm_model(input_length,
-                   num_classes,
-                   num_features,
-                   embedding_matrix,
-                   embedding_dim,
-                   filters_num=512,
-                   filter_sizes=None,
-                   dropout_rate=0.5):
+                    num_classes,
+                    num_features,
+                    embedding_matrix,
+                    embedding_dim,
+                    filters_num=512,
+                    filter_sizes=None,
+                    dropout_rate=0.5):
     if filter_sizes is None:
         filter_sizes = [5]
     op_units, op_activation = num_classes, 'softmax'

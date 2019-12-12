@@ -84,7 +84,7 @@ def normalization(df, ignore=None, eps=0.00000001):
         MIN, MAX = min(df[each]), max(df[each])
         if each in ignore:
             continue
-        d = df[each].apply(lambda x: (x-MIN)/(MAX-MIN+eps))
+        d = df[each].apply(lambda x: (x - MIN) / (MAX - MIN + eps))
         df.drop(each, axis=1)
         df[each] = d
     return df
@@ -133,9 +133,9 @@ if __name__ == "__main__":
         all_data = pd.concat([train, valid, test])
         all_data = normalization(all_data, ignore=['essay_id'])
         train, valid, test = \
-            all_data[:train_len], all_data[train_len: train_len+valid_len], all_data[train_len+valid_len:]
+            all_data[:train_len], all_data[train_len: train_len + valid_len], all_data[train_len + valid_len:]
 
-        assert(len(train)==len(train_label) and len(valid)==len(valid_label) and len(test)==test_len)
+        assert (len(train) == len(train_label) and len(valid) == len(valid_label) and len(test) == test_len)
 
         # to_save = FeatureDatasets(train=train, train_label=train_label, valid=valid, valid_label=valid_label, test=test)
         train.to_csv('../resources/dataframes2/TrainSet' + str(set_id) + '.csv', index=False)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         valid_label.to_csv('../resources/dataframes2/ValidLabel' + str(set_id) + '.csv', index=False)
 
         test.to_csv('../resources/dataframes2/TestSet' + str(set_id) + '.csv', index=False)
-        test_label.to_csv('../resources/dataframes2/TestLabel'+str(set_id)+'.csv', index=False)
+        test_label.to_csv('../resources/dataframes2/TestLabel' + str(set_id) + '.csv', index=False)
         # pickle.dump(to_save, open('../resources/dataframes2/SyntaxFeatureLabelSet' + str(set_id) + '.pl', 'wb'))
         # break
     print("Done~")

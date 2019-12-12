@@ -1,6 +1,6 @@
 from models.feature_common import *
 from models.feature_engineering import *
-import os,jpype
+import os, jpype
 import pandas as pd
 import numpy as np
 import progressbar
@@ -37,7 +37,6 @@ class StringKernelFeatureEngineering(FeatureEngineer):
 
         return data['essay_id'], matrix
 
-
     @timeit
     def fit_transform(self, data):
         self.fit(data)
@@ -54,7 +53,7 @@ def read_labels(label_path, set_index, columns=('essay_id', 'essay_set', 'domain
     return df
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     # jarpath = os.path.join(os.path.abspath('../resources/StringKernelsPackage/code'), 'test.jar')
     # print(jarpath)
     # jpype.startJVM(jpype.getDefaultJVMPath(), '-ea', '-Djava.class.path=%s' % jarpath)

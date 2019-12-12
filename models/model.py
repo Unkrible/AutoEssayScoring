@@ -58,11 +58,11 @@ if __name__ == '__main__':
         }
         for feature_set in feature_sets:
             train_data = pd.read_csv(f"../{feature_set}/TrainSet{set_id}.csv", **csv_params)
-            train_label = pd.read_csv(f"/home/chengfeng/{feature_set}/TrainLabel{set_id}.csv", **csv_params)
-            valid_data = pd.read_csv(f"/home/chengfeng/{feature_set}/ValidSet{set_id}.csv", **csv_params)
-            valid_label = pd.read_csv(f"/home/chengfeng/{feature_set}/ValidLabel{set_id}.csv", **csv_params)
-            test_data = pd.read_csv(f"/home/chengfeng/{feature_set}/TestSet{set_id}.csv", **csv_params)
-            test_label = pd.read_csv(f"/home/chengfeng/{feature_set}/TestLabel{set_id}.csv", **csv_params)
+            train_label = pd.read_csv(f"../{feature_set}/TrainLabel{set_id}.csv", **csv_params)
+            valid_data = pd.read_csv(f"../{feature_set}/ValidSet{set_id}.csv", **csv_params)
+            valid_label = pd.read_csv(f"../{feature_set}/ValidLabel{set_id}.csv", **csv_params)
+            test_data = pd.read_csv(f"../{feature_set}/TestSet{set_id}.csv", **csv_params)
+            test_label = pd.read_csv(f"../{feature_set}/TestLabel{set_id}.csv", **csv_params)
 
             data = pd.concat([train_data, valid_data])
             label = pd.concat([train_label, valid_label])

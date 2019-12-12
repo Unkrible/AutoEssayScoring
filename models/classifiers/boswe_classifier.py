@@ -28,8 +28,6 @@ def _cnn_lstm_model(input_length,
                         trainable=False
                         ))
 
-    model.summary()
-
     model.add(Bidirectional(LSTM(units=int(embedding_dim / 2), return_sequences=True), input_shape=(-1, embedding_dim)))
 
     model.add(Flatten())

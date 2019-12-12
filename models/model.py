@@ -44,7 +44,7 @@ class Model(Classifier):
 if __name__ == '__main__':
     import pandas as pd
     import numpy as np
-
+    from sklearn.preprocessing import MinMaxScaler
     from constant import ESSAY_INDEX, ESSAY_LABEL
 
     feature_sets = ["hisk"]
@@ -64,11 +64,13 @@ if __name__ == '__main__':
             test_data = pd.read_csv(f"../{feature_set}/TestSet{set_id}.csv", **csv_params)
             test_label = pd.read_csv(f"../{feature_set}/TestLabel{set_id}.csv", **csv_params)
 
-            data = pd.concat([train_data, valid_data])
+            data: pd.DataFrame = pd.concat([train_data, valid_data])
             label = pd.concat([train_label, valid_label])
-
+            scaler = MinMaxScaler()
+            data = scaler.fit_transform(data)
             model = Model({}, DenseClassifier)
             model.fit((data, label[ESSAY_LABEL]))
+            test_data = scaler.transform(test_data)
             y_hat = model.predict(test_data)
             res = kappa(test_label[ESSAY_LABEL], y_hat)
             results.append(res)

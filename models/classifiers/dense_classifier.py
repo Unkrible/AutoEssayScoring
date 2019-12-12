@@ -41,12 +41,12 @@ class DenseClassifier(Classifier):
             *[*self._model_args, *args],
             **{**self._model_kwargs, **kwargs}
         )
-        self._model.fit(x.values, y.values, shuffle=True)
+        self._model.fit(x, y.values, shuffle=True)
 
     def predict(self, data, *args, **kwargs):
-        return self._model.predict(data.values)
+        return self._model.predict(data)
 
-    units_candidates = [500, 100, 50, 30, 10]
+    units_candidates = [2000, 1000, 500, 100, 50, 30, 10]
     units_combinations = [
         *list(combinations(units_candidates, 2)),
         *list(combinations(units_candidates, 3)),

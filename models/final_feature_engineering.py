@@ -14,7 +14,7 @@ from models.syntax import SyntaxFeature
 from models.feature_engineering import FeatureEngineer
 
 
-class SyntaxFeatureEngineer(FeatureEngineer):
+class FinalFeatureEngineer(FeatureEngineer):
     def __init__(self):
         FeatureEngineer.__init__(self)
         pass
@@ -24,7 +24,28 @@ class SyntaxFeatureEngineer(FeatureEngineer):
 
     @timeit
     def transform(self, data):
+        remain_columns=['correction_num', 'unique_token_count',
+                        'mean_word_len', 'variance_word_len', 'mean_sen_len', 'variance_sen_len',
+                        'essay_len_char', 'essay_len_word',
+                        'num_prep_comma', 'mean_number_clause', 'mean_len_clauses',
+                        'max_len_clause']
+        data['word_len'] = data.apply(lambda x: [len(each) for each in x['tokens']], axis=1)
+        data['mean_word_len'] = data.apply(lambda x: sum(x['word_len'])/len(x['mean_word_len']), axis=1)
+        data['variance_word_len'] = data.apply(lambda x: sum([(each-x['mean_word_len'])**2 for each in x['word_len']])/len(x['word_len']), axis=1)
+        data.pop('word_len')
+
+        data['sen_len'] = data.apply(lambda x: [len(each.split(' ')) for each in x['sents']], axis=1)
+        data['mean_sen_len'] = data.apply(lambda x: sum(x['sen_len'])/len(x['sen_len']), axis=1)
+        data['variance_sen_len'] = data.apply(lambda x: sum([(each-x['mean_sen_len'])**2 for each in x['sen_len']])/len(x['sen_len']), axis=1)
+        data.pop('sen_len')
+
+        data['essay_len_word'] = data['token_count']
+        data['essay_len_char'] = data.apply(lambda x: sum([len(sent) for sent in x['sents']]), axis=1)
+
+
+
         data = self._syntax_features(data)
+
         return data
 
     def fit_transform(self, data):
@@ -105,7 +126,7 @@ FeatureDatasets = namedtuple("FeatureDatasets", ['train', 'train_label', 'valid'
 if __name__ == "__main__":
 
     for set_id in range(1, 9):
-        
+
         print("Now for set %d" % set_id)
         dataset = pickle.load(
             open('../resources/dataframes/TaskIndependentFeatureLabelSet' + str(set_id) + '.pl', 'rb'))
@@ -114,7 +135,7 @@ if __name__ == "__main__":
         valid = dataset.valid
         test = dataset.test
 
-        fe = SyntaxFeatureEngineer()
+        fe = FinalFeatureEngineer()
         train = fe.fit_transform(train)
         valid = fe.fit_transform(valid)
         test = fe.fit_transform(test)

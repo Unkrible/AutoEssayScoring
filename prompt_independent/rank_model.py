@@ -7,7 +7,6 @@ from constant import RANDOM_STATE
 from models.classifier import Classifier
 
 
-# TODO: 特征工程
 class LgbRankModel(Classifier):
 
     def __init__(self, **kwargs):
@@ -24,14 +23,14 @@ class LgbRankModel(Classifier):
         self._cut_bins = None
 
     def preprocess_dataset(self, x, y):
-        index = np.argsort(y)
-        x, y = x[index, :], y[index]
-        group = np.histogram(y, bins=self._cut_bins)
+        index = np.argsort(y.values)
+        x, y = x.iloc[index], y.iloc[index]
+        group, _ = np.histogram(y, bins=self._cut_bins)
         return x, y, group
 
     def fit(self, dataset, *args, **kwargs):
         x, y = dataset
-        _, self._cut_bins = pd.qcut(y, 10)
+        _, self._cut_bins = pd.qcut(y, 10, retbins=True, duplicates='drop')
         x_train, x_valid, y_train, y_valid = train_test_split(
             x, y,
             test_size=0.2, random_state=RANDOM_STATE
@@ -46,7 +45,7 @@ class LgbRankModel(Classifier):
             300,
             valid_data,
             early_stopping_rounds=30,
-            verbose_eval=0
+            verbose_eval=1
         )
 
     def predict(self, data, *args, **kwargs):

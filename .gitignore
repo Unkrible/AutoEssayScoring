@@ -7,4 +7,5 @@ resources/
 features/
 *.tsv
 hisk*/
+prompt-independent/
 

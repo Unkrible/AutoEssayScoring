@@ -100,6 +100,9 @@ if __name__ == '__main__':
         'index_col': ESSAY_INDEX,
         'dtype': {'domain1_score': np.float}
     }
+    feature_range = [
+
+    ]
 
     # read data
     train_data = read_datasets(f"../{feature_file}/TrainSet", set_id, read_dataset, **csv_params)
@@ -113,26 +116,35 @@ if __name__ == '__main__':
     rank_model = LgbRankModel()
     rank_model.fit((train_data, train_label))
     rank_hat = rank_model.predict(test_data)
-    test_data[RANK] = rank_hat
-    sort_index = test_data[RANK].sort_values().index
-    bad_index = sort_index[:int(len(sort_index) * 0.4)]
-    good_index = sort_index[int(len(sort_index) * 0.7):]
 
-    # preprocess test data
-    csv_params['sep'] = '\t'
-    test_data = read_dataset(f"../essay_data/", "test.tsv", **csv_params)
-    test_data = test_data[test_data["essay_set"] == set_id]["essay"]
-    # train dnn model
-    weights, embedding_dim = read_glove()
-    x_all, word_index, num_features, tokenizer, max_length = sequentialize_data(test_data)
-    embedding_table = lookup_embedding(word_index, weights, embedding_dim, num_features)
-    dnn_model = DNNModel(
-        hidden_dim=256,
-        dense_dim=128,
-        embedding_table=embedding_table,
-        embedding_dim=embedding_dim,
-        max_words=200000
-    )
-    dnn_model.fit(x_all, bad_index=bad_index, good_index=good_index)
-    y_all_hat = dnn_model.predict(x_all)
-    print("here")
+    labels = pd.Series(rank_hat, index=test_data.index)
+    from sklearn.preprocessing import MinMaxScaler
+    scaler = MinMaxScaler(feature_range=(0, 10))
+    # test_data[RANK] = rank_hat
+    # sort_index = test_data[RANK].sort_values().index
+    # bad_index = sort_index[:int(len(sort_index) * 0.4)]
+    # good_index = sort_index[int(len(sort_index) * 0.7):]
+    #
+    # bad_labels = pd.Series(np.zeros(len(bad_index)), index=bad_index)
+    # good_labels = pd.Series(np.ones(len(good_index)), index=good_index)
+    # labels = pd.concat([bad_labels, good_labels])
+    #
+    # # preprocess test data
+    # csv_params['sep'] = '\t'
+    # test_data = read_dataset(f"../essay_data/", "test.tsv", **csv_params)
+    # test_data = test_data[test_data["essay_set"] == set_id]["essay"]
+    # # train dnn model
+    # weights, embedding_dim = read_glove()
+    # x_all, word_index, num_features, tokenizer, max_length = sequentialize_data(test_data)
+    # embedding_table = lookup_embedding(word_index, weights, embedding_dim, num_features)
+    # dnn_model = DNNModel(
+    #     hidden_dim=256,
+    #     dense_dim=128,
+    #     embedding_table=embedding_table,
+    #     embedding_dim=embedding_dim,
+    #     num_features=num_features,
+    #     max_words=max_length
+    # )
+    # dnn_model.fit(pd.DataFrame(x_all, index=test_data.index), bad_index=bad_index, good_index=good_index)
+    # y_all_hat = dnn_model.predict(x_all)
+    # print("here")

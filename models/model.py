@@ -47,33 +47,47 @@ if __name__ == '__main__':
     from sklearn.preprocessing import MinMaxScaler
     from constant import ESSAY_INDEX, ESSAY_LABEL
 
-    feature_sets = ["hisk"]
+    feature_set = "hisk"
     start = 1
-    stop = 9
+    stop = 2
     results = []
     for set_id in range(start, stop):
         csv_params = {
             'index_col': ESSAY_INDEX,
             'dtype': {'domain1_score': np.float}
         }
-        for feature_set in feature_sets:
+        train_data_sets = []
+        train_label_sets = []
+        valid_data_sets = []
+        valid_label_sets = []
+        for each in range(1, 9):
+            if each == set_id:
+                continue
             train_data = pd.read_csv(f"../{feature_set}/TrainSet{set_id}.csv", **csv_params)
             train_label = pd.read_csv(f"../{feature_set}/TrainLabel{set_id}.csv", **csv_params)
             valid_data = pd.read_csv(f"../{feature_set}/ValidSet{set_id}.csv", **csv_params)
             valid_label = pd.read_csv(f"../{feature_set}/ValidLabel{set_id}.csv", **csv_params)
-            test_data = pd.read_csv(f"../{feature_set}/TestSet{set_id}.csv", **csv_params)
-            test_label = pd.read_csv(f"../{feature_set}/TestLabel{set_id}.csv", **csv_params)
+            train_data_sets.append(train_data)
+            train_label_sets.append(train_label)
+            valid_data_sets.append(valid_data)
+            valid_label_sets.append(valid_label)
+        train_data = pd.concat(train_data_sets)
+        train_label = pd.concat(train_label_sets)
+        valid_data = pd.concat(valid_data_sets)
+        valid_label = pd.concat(valid_label_sets)
+        test_data = pd.read_csv(f"../{feature_set}/TestSet{set_id}.csv", **csv_params)
+        test_label = pd.read_csv(f"../{feature_set}/TestLabel{set_id}.csv", **csv_params)
 
-            data: pd.DataFrame = pd.concat([train_data, valid_data])
-            label = pd.concat([train_label, valid_label])
-            scaler = MinMaxScaler()
-            data = scaler.fit_transform(data)
-            model = Model({}, DenseClassifier)
-            model.fit((data, label[ESSAY_LABEL]))
-            test_data = scaler.transform(test_data)
-            y_hat = model.predict(test_data)
-            res = kappa(test_label[ESSAY_LABEL], y_hat)
-            results.append(res)
-            print(f"{set_id}: {feature_set} kappa {res}")
+        data: pd.DataFrame = pd.concat([train_data, valid_data])
+        label = pd.concat([train_label, valid_label])
+        scaler = MinMaxScaler()
+        data = scaler.fit_transform(data)
+        model = Model({}, LgbClassifier)
+        model.fit((data, label[ESSAY_LABEL]))
+        test_data = scaler.transform(test_data)
+        y_hat = model.predict(test_data)
+        res = kappa(test_label[ESSAY_LABEL], y_hat)
+        results.append(res)
+        print(f"{set_id}: {feature_set} kappa {res}")
     print(results)
     print(np.mean(results))

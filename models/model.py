@@ -47,6 +47,17 @@ if __name__ == '__main__':
     from sklearn.preprocessing import MinMaxScaler
     from constant import ESSAY_INDEX, ESSAY_LABEL
 
+    asap_ranges = {
+        1: (2.0, 12.0),
+        2: (1.0, 6.0),
+        3: (0.0, 3.0),
+        4: (0.0, 3.0),
+        5: (0.0, 4.0),
+        6: (0.0, 4.0),
+        7: (0.0, 30.0),
+        8: (0.0, 60.0)
+    }
+
     feature_set = "hisk"
     start = 1
     stop = 2
@@ -63,10 +74,14 @@ if __name__ == '__main__':
         for each in range(1, 9):
             if each == set_id:
                 continue
+            label_scaler = MinMaxScaler(feature_range=(0, 10))
             train_data = pd.read_csv(f"../{feature_set}/TrainSet{set_id}.csv", **csv_params)
             train_label = pd.read_csv(f"../{feature_set}/TrainLabel{set_id}.csv", **csv_params)
+            train_label = label_scaler.fit_transform(train_label)
             valid_data = pd.read_csv(f"../{feature_set}/ValidSet{set_id}.csv", **csv_params)
             valid_label = pd.read_csv(f"../{feature_set}/ValidLabel{set_id}.csv", **csv_params)
+            valid_label = label_scaler.transform(valid_label)
+
             train_data_sets.append(train_data)
             train_label_sets.append(train_label)
             valid_data_sets.append(valid_data)
@@ -86,6 +101,8 @@ if __name__ == '__main__':
         model.fit((data, label[ESSAY_LABEL]))
         test_data = scaler.transform(test_data)
         y_hat = model.predict(test_data)
+        label_scaler = MinMaxScaler(feature_range=asap_ranges[set_id])
+        y_hat = label_scaler.fit_transform(y_hat)
         res = kappa(test_label[ESSAY_LABEL], y_hat)
         results.append(res)
         print(f"{set_id}: {feature_set} kappa {res}")

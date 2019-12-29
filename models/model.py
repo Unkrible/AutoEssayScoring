@@ -58,10 +58,21 @@ if __name__ == '__main__':
         8: (0.0, 60.0)
     }
 
+    # 12  78  134  56
+    sets = {
+        1: [2],
+        2: [1],
+        3: [1, 4],
+        4: [1, 3],
+        5: [6],
+        6: [5],
+        7: range(1, 9),
+        8: range(1, 9)
+    }
+
     feature_set = "dataframes4"
     start = 1
     stop = 9
-    results = []
     outputs = []
     for set_id in range(start, stop):
         csv_params = {
@@ -72,20 +83,20 @@ if __name__ == '__main__':
         train_label_sets = []
         valid_data_sets = []
         valid_label_sets = []
-        for each in range(1, 9):
+        for each in sets[set_id]:
             if each == set_id:
                 continue
             label_scaler = MinMaxScaler(feature_range=(0, 10))
-            train_data = pd.read_csv(f"../{feature_set}/TrainSet{set_id}.csv", **csv_params)
-            train_label = pd.read_csv(f"../{feature_set}/TrainLabel{set_id}.csv", **csv_params)
+            train_data = pd.read_csv(f"../{feature_set}/TrainSet{each}.csv", **csv_params)
+            train_label = pd.read_csv(f"../{feature_set}/TrainLabel{each}.csv", **csv_params)
             train_label = pd.Series(
                 label_scaler.fit_transform(
                     train_label[ESSAY_LABEL].values.reshape(-1, 1)
                 ).reshape(-1),
                 index=train_label.index
             )
-            valid_data = pd.read_csv(f"../{feature_set}/ValidSet{set_id}.csv", **csv_params)
-            valid_label = pd.read_csv(f"../{feature_set}/ValidLabel{set_id}.csv", **csv_params)
+            valid_data = pd.read_csv(f"../{feature_set}/ValidSet{each}.csv", **csv_params)
+            valid_label = pd.read_csv(f"../{feature_set}/ValidLabel{each}.csv", **csv_params)
             valid_label = pd.Series(
                 label_scaler.transform(valid_label[ESSAY_LABEL].values.reshape(-1, 1)).reshape(-1),
                 index=valid_label.index
@@ -100,7 +111,6 @@ if __name__ == '__main__':
         valid_data = pd.concat(valid_data_sets)
         valid_label = pd.concat(valid_label_sets)
         test_data = pd.read_csv(f"../{feature_set}/TestSet{set_id}.csv", **csv_params)
-        test_label = pd.read_csv(f"../{feature_set}/TestLabel{set_id}.csv", **csv_params)
         index = test_data.index
         data: pd.DataFrame = pd.concat([train_data, valid_data])
         label = pd.concat([train_label, valid_label])
@@ -112,16 +122,11 @@ if __name__ == '__main__':
         y_hat = model.predict(test_data)
         label_scaler = MinMaxScaler(feature_range=asap_ranges[set_id])
         y_hat = label_scaler.fit_transform(y_hat.reshape(-1, 1)).reshape(-1)
-        res = kappa(test_label[ESSAY_LABEL], y_hat)
-        results.append(res)
-        print(f"{set_id}: {feature_set} kappa {res}")
         tmp = pd.DataFrame({ESSAY_INDEX: index})
         tmp.set_index(ESSAY_INDEX, drop=True, inplace=True)
         tmp['essay_set'] = set_id
         tmp['pred'] = y_hat
         outputs.append(tmp)
-    print(results)
-    print(np.mean(results))
     result = pd.concat(outputs)
     result['pred'] = result['pred'].apply(np.round)
     result.to_csv('MG1933078.tsv', sep='\t', header=False)
